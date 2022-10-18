@@ -6,6 +6,7 @@ public class InventoryManager : MonoBehaviour
 {
     private bool inventoryEnabled;
     public GameObject inventory;
+    public GameObject list;
     private int allSlots;
     private int enabledSlots;
     private GameObject[] slot;
@@ -36,10 +37,12 @@ public class InventoryManager : MonoBehaviour
         if (inventoryEnabled)
         {
             inventory.SetActive(true);
+            list.SetActive(true);
         }
         else
         {
             inventory.SetActive(false);
+            list.SetActive(false);
         }
     }
 
@@ -50,6 +53,7 @@ public class InventoryManager : MonoBehaviour
             GameObject itemPickedUp = other.gameObject;
             ItemManager item = itemPickedUp.GetComponent<ItemManager>();
             AddItem(itemPickedUp, item.ID, item.type, item.description, item.icon);
+            ScoreManager.instance.AddPoint();
         }
     }
 

@@ -22,11 +22,13 @@ public class NavMesh : MonoBehaviour
 
     Vector3 vector3 = Vector3.zero;
     float distance = 0.0f;
+    Animator enemyAnimator;
 
     void Start()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
         navMeshAgent.autoBraking = false;
+        enemyAnimator = GetComponentInChildren<Animator>();
     }
 
     void Update()
@@ -41,6 +43,8 @@ public class NavMesh : MonoBehaviour
             navMeshAgent.destination = points[destPoint].position;
 
             destPoint = (destPoint + 1) % points.Length;
+
+            enemyAnimator.SetFloat("Enemy Movements", 0, 0.1f, Time.deltaTime);
         }
         if (points.Length == 0)
             return;

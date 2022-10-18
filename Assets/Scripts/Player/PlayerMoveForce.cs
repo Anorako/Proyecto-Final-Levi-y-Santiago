@@ -4,6 +4,7 @@ public class PlayerMoveForce : MonoBehaviour
 {
     private CharacterController controller;
     private GameObject camara;
+    public GameObject GameOverScreen;
 
     [Header("Estadisticas normales")]
     [SerializeField] private float velocidad;
@@ -19,6 +20,7 @@ public class PlayerMoveForce : MonoBehaviour
     float gravedad = -9.81f;
     Vector3 velocity;
     bool tocarSuelo;
+    public bool gameOver;
 
     Animator playerAnimator;
 
@@ -31,40 +33,52 @@ public class PlayerMoveForce : MonoBehaviour
 
     private void Update()
     {
-        tocarSuelo = Physics.CheckSphere(detectaSuelo.position, distanciaSuelo, mascaraSuelo);
-
-        if(tocarSuelo && velocity.y < 0)
+        if (gameOver == false)
         {
-            velocity.y = -2f;
+            tocarSuelo = Physics.CheckSphere(detectaSuelo.position, distanciaSuelo, mascaraSuelo);
+
+            if (tocarSuelo && velocity.y < 0)
+            {
+                velocity.y = -2f;
+            }
+
+            if (Input.GetButtonDown("Jump") && tocarSuelo)
+            {
+                velocity.y = Mathf.Sqrt(alturaDeSalto * -2 * gravedad);
+            }
+
+            velocity.y += gravedad * Time.deltaTime;
+            controller.Move(velocity * Time.deltaTime);
+
+            float horizontal = Input.GetAxisRaw("Horizontal");
+            float vertical = Input.GetAxisRaw("Vertical");
+            Vector3 direccion = new Vector3(horizontal, 0f, vertical).normalized;
+
+            if (direccion.magnitude <= 0)
+            {
+                playerAnimator.SetFloat("Movements", 0, 0.1f, Time.deltaTime);
+            }
+
+
+            if (direccion.magnitude >= 0.1f)
+            {
+                float objetivoAngulo = Mathf.Atan2(direccion.x, direccion.z) * Mathf.Rad2Deg + camara.transform.eulerAngles.y;
+                float angulo = Mathf.SmoothDampAngle(transform.eulerAngles.y, objetivoAngulo, ref velocidadGiro, tiempoAlGirar);
+                transform.rotation = Quaternion.Euler(0, angulo, 0);
+
+                Vector3 mover = Quaternion.Euler(0, objetivoAngulo, 0) * Vector3.forward;
+                controller.Move(mover.normalized * velocidad * Time.deltaTime);
+                playerAnimator.SetFloat("Movements", 1, 0.1f, Time.deltaTime);
+            }
         }
-
-        if(Input.GetButtonDown("Jump") && tocarSuelo)
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("Enemy"))
         {
-            velocity.y = Mathf.Sqrt(alturaDeSalto * -2 * gravedad);
-        }
-
-        velocity.y += gravedad * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
-
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 direccion = new Vector3(horizontal, 0f, vertical).normalized;
-
-        if(direccion.magnitude <= 0)
-        {
-            playerAnimator.SetFloat("Movements", 0, 0.1f, Time.deltaTime);
-        }
-        
-
-        if(direccion.magnitude >= 0.1f)
-        {
-            float objetivoAngulo = Mathf.Atan2(direccion.x, direccion.z) * Mathf.Rad2Deg + camara.transform.eulerAngles.y;
-            float angulo = Mathf.SmoothDampAngle(transform.eulerAngles.y, objetivoAngulo, ref velocidadGiro, tiempoAlGirar);
-            transform.rotation = Quaternion.Euler(0, angulo, 0);
-
-            Vector3 mover = Quaternion.Euler(0, objetivoAngulo, 0) * Vector3.forward;
-            controller.Move(mover.normalized * velocidad * Time.deltaTime);
-            playerAnimator.SetFloat("Movements", 1, 0.1f, Time.deltaTime);
+            Debug.Log("Game Over");
+            gameOver = true;
+            GameOverScreen.SetActive(true);
         }
     }
 }
